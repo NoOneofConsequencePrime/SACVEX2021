@@ -1,4 +1,4 @@
-// /*----------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------------*/
 /*                                                                            */
 /*    Module:       main.cpp                                                  */
 /*    Author:       VEX                                                       */
@@ -47,7 +47,7 @@ void pre_auton(void) {
   // Robot Init
   Gyro.startCalibration(2000);
   wait(2, sec);
-  wait(2000, msec);
+  wait(200, msec);
   while (Gyro.isCalibrating()) {
     wait(10, msec);
     print("hello world");
@@ -79,9 +79,25 @@ void movR(float rVal) {
   RT.spin(forward, rVal, pct);
 }
 
-void arcadeDrive(){
+void tankDrive(){ //Drivetrain (W.I.P.)
+  if (Channel3 != 0) {
+    LB.spin(reverse, Channel3, percent);
+    LT.spin(reverse, Channel3, percent);
+  } else {
+    LB.stop();
+    LT.stop();
+  }
+  if (Channel2 != 0) {
+    RB.spin(forward, Channel2, percent);
+    RT.spin(forward, Channel2, percent);
+  } else {
+    RB.stop();
+    RT.stop();
+  }
+}
+
+void arcadeDrive(float joyX, float joyY) {
   // Base variables
-  float joyX = Channel4, joyY = Channel3;
   float motMixL, motMixR;
   float pivYLim = 100.0;
   // TEMP
@@ -114,32 +130,6 @@ void arcadeDrive(){
   movR(motMixR);
 }
 
-void tankDrive(){ //Drivetrain (W.I.P.)
-  if (Channel3 != 0) {
-    LB.spin(reverse, Channel3, percent);
-    LT.spin(reverse, Channel3, percent);
-  } else {
-    LB.stop();
-    LT.stop();
-  }
-  if (Channel2 != 0) {
-    RB.spin(forward, Channel2, percent);
-    RT.spin(forward, Channel2, percent);
-  } else {
-    RB.stop();
-    RT.stop();
-  }
-}
-
-void bruceDrive() {
-  if (Channel3 != 0) {
-
-  }
-  if (Channel1 != 0) {
-    
-  }
-}
-
 void rollerSpin(){ //Spin roller + intake
   if (Ct1.ButtonL1.pressing()){
     roller.spin(forward, 100, percent);
@@ -151,12 +141,14 @@ void rollerSpin(){ //Spin roller + intake
 }
 
 void moveArm() { //Arm up + down
+  RArm.setStopping(coast);
+  LArm.setStopping(coast);
   if (Ct1.ButtonR1.pressing()){
-    RArm.spin(forward, 50, percent);
-    LArm.spin(reverse, 50, percent);
+    RArm.spin(forward, 35, percent);
+    LArm.spin(reverse, 35, percent);
   } else if (Ct1.ButtonR2.pressing()){
-    RArm.spin(reverse, 50, percent);
-    LArm.spin(forward, 50, percent);
+    RArm.spin(reverse, 35, percent);
+    LArm.spin(forward, 35, percent);
   } else {
     RArm.stop();
     LArm.stop();
@@ -258,9 +250,11 @@ void usercontrol(void) {
     rollerSpin();
     moveArm();
     moveHook();
-    // arcadeDrive();
     // tankDrive();
-    bruceDrive();
+    // Bruce Drive
+    arcadeDrive(Channel1, Channel3);
+    // // Normal Arcade Drive
+    // arcadeDrive(Channel4, Channel3);
     debug();
     wait(5, msec); // Sleep the task for a short amount of time to prevent wasted resources
   }
