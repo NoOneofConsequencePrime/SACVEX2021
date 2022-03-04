@@ -39,6 +39,7 @@ using namespace vex;
 // Program init
 #define print Brain.Screen.print
 #define Ct1 Controller1
+#define db double
 
 competition Competition;
 
@@ -100,48 +101,88 @@ void debug() {
 }
 
 void moveForward(double dist, int spd) {// (cm, pct)
+  // Settings
+  LT.setStopping(brake);
+  LB.setStopping(brake);
+  RT.setStopping(brake);
+  RB.setStopping(brake);
+
+  // Data
   struct st {
     double lt, lb;// neg = forward
     double rt, rb;// pos = forward
   };
   st curWheels = {LT.position(turns), LB.position(turns), RT.position(turns), RB.position(turns)};
   double rotNeed = dist/(10.16*PI);
-  rotNeed -= std::min(rotNeed, (spd*spd/1000 + 3)/(10.16*PI));
 
-  LT.setStopping(brake);
-  LB.setStopping(brake);
-  RT.setStopping(brake);
-  RB.setStopping(brake);
-
-  RT.setVelocity(spd, pct);
-  LB.setVelocity(-spd, pct);
-  RB.setVelocity(spd, pct);
-  LT.setVelocity(-spd, pct);
+  if (dist > 0) {// forward
+    rotNeed -= std::min(rotNeed, ((db)spd*spd/1000 + 3)/(10.16*PI));
+    RT.setVelocity(spd, pct);
+    LB.setVelocity(-spd, pct);
+    RB.setVelocity(spd, pct);
+    LT.setVelocity(-spd, pct);
+  } else if (dist < 0) {// backward
+    rotNeed += std::max(rotNeed, ((db)spd*spd/1000 + 3)/(10.16*PI));
+    RT.setVelocity(-spd, pct);
+    LB.setVelocity(spd, pct);
+    RB.setVelocity(-spd, pct);
+    LT.setVelocity(spd, pct);
+  }
 
   RT.spinToPosition(curWheels.rt+rotNeed, turns);
   LB.spinToPosition(curWheels.lb-rotNeed, turns);
   RB.spinToPosition(curWheels.rb+rotNeed, turns);
   LT.spinToPosition(curWheels.lt-rotNeed, turns);
+
   // while (RT.position(turns) < curWheels.rt+rotNeed || RB.position(turns) < curWheels.rb+rotNeed || LT.position(turns) > curWheels.lt-rotNeed || LB.position(turns) > curWheels.lb-rotNeed) {
   // }
   // LT.stop();
   // RT.stop();
   // LB.stop();
   // RB.stop();
-  
-  // debug();
-  // Brain.Screen.setCursor(4, 1);
-  // print("CurRot: ");
-  // print(LT.)
-
 }
 
-static int cnt = 0;
+void rotateTowards(double rot, int spd) {
+  // Settings
+  LT.setStopping(brake);
+  LB.setStopping(brake);
+  RT.setStopping(brake);
+  RB.setStopping(brake);
+
+  // Data
+  double initDeg = Gyro.rotation(deg);
+
+  if (rot > 0) {
+    // Adjustment
+    rot = std::max(0.0, rot - ((db)spd*spd/250 + rot/15));
+    RT.setVelocity(-spd, pct);
+    LB.setVelocity(-spd, pct);
+    RB.setVelocity(-spd, pct);
+    LT.setVelocity(-spd, pct);
+    RT.spin(forward);
+    LB.spin(forward);
+    RB.spin(forward);
+    LT.spin(forward);
+    while (Gyro.rotation(deg) < initDeg+rot) {
+      wait(5, msec);
+    }
+    LT.stop();
+    RT.stop();
+    LB.stop();
+    RB.stop();
+  } else if (rot < 0) {
+    RT.setVelocity(-spd, pct);
+    LB.setVelocity(-spd, pct);
+    RB.setVelocity(-spd, pct);
+    LT.setVelocity(-spd, pct);
+  }
+}
 
 void autonomous(void) {
-  moveForward(100, 30);
-  cnt++;
-  return;
+  // moveForward(-100, 30);
+  rotateTowards(180, 30);
+  // rotateTowards(-90, 30);
+  debug();
 }
 
 // Global Variables
@@ -183,6 +224,12 @@ void tankDrive(){ //Drivetrain (W.I.P.)
 }
 
 void arcadeDrive(float joyX, float joyY) {
+  // Settings
+  // LT.setStopping(coast);
+  // LB.setStopping(coast);
+  // RT.setStopping(coast);
+  // RB.setStopping(coast);
+
   // Base variables
   float motMixL, motMixR;
   float pivYLim = 100.0;
