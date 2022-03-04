@@ -42,6 +42,9 @@ using namespace vex;
 
 competition Competition;
 
+// Program Parameters
+static const double PI = 3.1415926;
+
 void pre_auton(void) {
   vexcodeInit();
   // Robot Init
@@ -53,8 +56,92 @@ void pre_auton(void) {
   // }
 }
 
-void autonomous(void) {
+void debug() {
+  Brain.Screen.clearScreen();
+  // print("LArm: ");
+  // print(LArm.position(degrees));
+  // Brain.Screen.setCursor(2, 1);
+  // print("RArm: ");
+  // print(RArm.position(degrees));
   
+  Brain.Screen.setCursor(1, 1);
+  print("LT: ");
+  print(LT.position(turns));
+  Brain.Screen.setCursor(2, 1);
+  print("LB: ");
+  print(LB.position(turns));
+  Brain.Screen.setCursor(3, 1);
+  print("RT: ");
+  print(RT.position(turns));
+  Brain.Screen.setCursor(4, 1);
+  print("RB: ");
+  print(RB.position(turns));
+  Brain.Screen.setCursor(5, 1);
+  print("Robot rotation: ");
+  print(Gyro.rotation(deg));
+  
+  /*
+  Forward:
+  Left side - negative
+  Right side - positive
+  Backward:
+  Left side - positive
+  Right side - negative
+  */
+
+  // print("Robot Heading: ");
+  // print(Gyro.heading(degrees));
+  // Brain.Screen.setCursor(2, 1);
+  // print("Robot Rotation: ");
+  // print(Gyro.rotation(degrees));
+
+  // print("Hook Degs: ");
+  // print(Hook.position(degrees));
+}
+
+void moveForward(double dist, int spd) {// (cm, pct)
+  struct st {
+    double lt, lb;// neg = forward
+    double rt, rb;// pos = forward
+  };
+  st curWheels = {LT.position(turns), LB.position(turns), RT.position(turns), RB.position(turns)};
+  double rotNeed = dist/(10.16*PI);
+  rotNeed -= std::min(rotNeed, (spd*spd/1000 + 3)/(10.16*PI));
+
+  LT.setStopping(brake);
+  LB.setStopping(brake);
+  RT.setStopping(brake);
+  RB.setStopping(brake);
+
+  RT.setVelocity(spd, pct);
+  LB.setVelocity(-spd, pct);
+  RB.setVelocity(spd, pct);
+  LT.setVelocity(-spd, pct);
+
+  RT.spinToPosition(curWheels.rt+rotNeed, turns);
+  LB.spinToPosition(curWheels.lb-rotNeed, turns);
+  RB.spinToPosition(curWheels.rb+rotNeed, turns);
+  LT.spinToPosition(curWheels.lt-rotNeed, turns);
+  // while (RT.position(turns) < curWheels.rt+rotNeed || RB.position(turns) < curWheels.rb+rotNeed || LT.position(turns) > curWheels.lt-rotNeed || LB.position(turns) > curWheels.lb-rotNeed) {
+  // }
+  // LT.stop();
+  // RT.stop();
+  // LB.stop();
+  // RB.stop();
+  
+  // debug();
+  // Brain.Screen.setCursor(4, 1);
+  // print("CurRot: ");
+  // print(LT.)
+
+}
+
+static int cnt = 0;
+
+void autonomous(void) {
+  moveForward(100, 30);
+  cnt++;
+  return;
 }
 
 // Global Variables
@@ -202,71 +289,6 @@ void robotTurn(float turnVal) {
   } else if (turnVal < 0) {
 
   }
-}
-
-void moveForward(double dist, int spd) {// (cm, pct)
-  struct st {
-    double lt, lb;// neg = forward
-    double rt, rb;// pos = forward
-  };
-  st curWheels = {LT.position(turns), LB.position(turns), RT.position(turns), RB.position(turns)};
-  double rotNeed = dist/(10.16*3.1416);
-
-  LT.setVelocity(-spd, pct);
-  LB.setVelocity(-spd, pct);
-  RT.setVelocity(spd, pct);
-  RB.setVelocity(spd, pct);
-  while (RT.position(turns) < curWheels.rt+rotNeed || RB.position(turns) < curWheels.rb+rotNeed || LT.position(turns) > curWheels.lt-rotNeed || LB.position(turns) > curWheels.lb-rotNeed) {
-    wait(5, msec);
-  }
-}
-
-void debug() {
-  // if (Ct1.ButtonUp.pressing()) {
-  //   moveForward(50, 30);
-  // }
-  
-  Brain.Screen.clearScreen();
-  Brain.Screen.setCursor(1, 1);
-  print("LArm: ");
-  print(LArm.position(degrees));
-  Brain.Screen.setCursor(2, 1);
-  print("RArm: ");
-  print(RArm.position(degrees));
-  /*
-  Brain.Screen.setCursor(1, 1);
-  print("LT: ");
-  print(LT.position(turns));
-  Brain.Screen.setCursor(2, 1);
-  print("LB: ");
-  print(LB.position(turns));
-  Brain.Screen.setCursor(3, 1);
-  print("RT: ");
-  print(RT.position(turns));
-  Brain.Screen.setCursor(4, 1);
-  print("RB: ");
-  print(RB.position(turns));
-  Brain.Screen.setCursor(5, 1);
-  print("Robot rotation: ");
-  print(Gyro.rotation(deg));
-  */
-  /*
-  Forward:
-  Left side - negative
-  Right side - positive
-  Backward:
-  Left side - positive
-  Right side - negative
-  */
-
-  // print("Robot Heading: ");
-  // print(Gyro.heading(degrees));
-  // Brain.Screen.setCursor(2, 1);
-  // print("Robot Rotation: ");
-  // print(Gyro.rotation(degrees));
-
-  // print("Hook Degs: ");
-  // print(Hook.position(degrees));
 }
 
 void usercontrol(void) {
