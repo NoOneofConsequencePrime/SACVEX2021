@@ -106,6 +106,10 @@ void moveForward(double dist, int spd) {// (cm, pct)
   LB.setStopping(brake);
   RT.setStopping(brake);
   RB.setStopping(brake);
+  RT.setVelocity(spd, pct);
+  LB.setVelocity(-spd, pct);
+  RB.setVelocity(spd, pct);
+  LT.setVelocity(-spd, pct);
 
   // Data
   struct st {
@@ -117,22 +121,31 @@ void moveForward(double dist, int spd) {// (cm, pct)
 
   if (dist > 0) {// forward
     rotNeed -= std::min(rotNeed, ((db)spd*spd/1000 + 3)/(10.16*PI));
-    RT.setVelocity(spd, pct);
-    LB.setVelocity(-spd, pct);
-    RB.setVelocity(spd, pct);
-    LT.setVelocity(-spd, pct);
+    RT.spin(forward);
+    LB.spin(forward);
+    RB.spin(forward);
+    LT.spin(forward);
+    while (RT.position(turns) < curWheels.rt+rotNeed) wait(5, msec);
   } else if (dist < 0) {// backward
     rotNeed += std::max(rotNeed, ((db)spd*spd/1000 + 3)/(10.16*PI));
-    RT.setVelocity(-spd, pct);
-    LB.setVelocity(spd, pct);
-    RB.setVelocity(-spd, pct);
-    LT.setVelocity(spd, pct);
+    RT.spin(reverse);
+    LB.spin(reverse);
+    RB.spin(reverse);
+    LT.spin(reverse);
+    while (RT.position(turns) > curWheels.rt+rotNeed) wait(5, msec);
   }
+  LT.stop();
+  RT.stop();
+  LB.stop();
+  RB.stop();
 
-  RT.spinToPosition(curWheels.rt+rotNeed, turns);
-  LB.spinToPosition(curWheels.lb-rotNeed, turns);
-  RB.spinToPosition(curWheels.rb+rotNeed, turns);
-  LT.spinToPosition(curWheels.lt-rotNeed, turns);
+  // RT.spinToPosition(curWheels.rt+rotNeed, turns);
+  // LB.spinToPosition(curWheels.lb-rotNeed, turns);
+  // RB.spinToPosition(curWheels.rb+rotNeed, turns);
+  // LT.spinToPosition(curWheels.lt-rotNeed, turns);
+
+  // inertia settle
+  wait(200, msec);
 
   // while (RT.position(turns) < curWheels.rt+rotNeed || RB.position(turns) < curWheels.rb+rotNeed || LT.position(turns) > curWheels.lt-rotNeed || LB.position(turns) > curWheels.lb-rotNeed) {
   // }
@@ -148,6 +161,10 @@ void rotateTowards(double rot, int spd) {
   LB.setStopping(brake);
   RT.setStopping(brake);
   RB.setStopping(brake);
+  RT.setVelocity(-spd, pct);
+  LB.setVelocity(-spd, pct);
+  RB.setVelocity(-spd, pct);
+  LT.setVelocity(-spd, pct);
 
   // Data
   double initDeg = Gyro.rotation(deg);
@@ -155,10 +172,6 @@ void rotateTowards(double rot, int spd) {
   if (rot > 0) {
     // Adjustment
     rot = std::max(0.0, rot - ((db)spd*spd/250 + rot/15));
-    RT.setVelocity(-spd, pct);
-    LB.setVelocity(-spd, pct);
-    RB.setVelocity(-spd, pct);
-    LT.setVelocity(-spd, pct);
     RT.spin(forward);
     LB.spin(forward);
     RB.spin(forward);
@@ -171,18 +184,34 @@ void rotateTowards(double rot, int spd) {
     LB.stop();
     RB.stop();
   } else if (rot < 0) {
-    RT.setVelocity(-spd, pct);
-    LB.setVelocity(-spd, pct);
-    RB.setVelocity(-spd, pct);
-    LT.setVelocity(-spd, pct);
+    // Adjustment
+    rot = std::min(0.0, rot + ((db)spd*spd/250 + rot/15));
+    RT.spin(reverse);
+    LB.spin(reverse);
+    RB.spin(reverse);
+    LT.spin(reverse);
+    while (Gyro.rotation(deg) > initDeg+rot) wait(5, msec);
+    LT.stop();
+    RT.stop();
+    LB.stop();
+    RB.stop();
   }
+  
+  // inertia settle
+  wait(200, msec);
 }
 
 void autonomous(void) {
-  // moveForward(-100, 30);
-  rotateTowards(180, 30);
-  // rotateTowards(-90, 30);
-  debug();
+  Hook.setStopping(hold);
+  Hook.setVelocity(100, pct);
+  Hook.spinToPosition(1100, degrees);
+  rotateTowards(27.5, 40);
+  moveForward(-55, 70);
+  Hook.spinToPosition(300, degrees);
+  while (Hook.isSpinning()) wait(5, msec);
+  moveForward(50, 100);
+  Hook.spinToPosition(1100, degrees);
+  debug(); 
 }
 
 // Global Variables
@@ -278,45 +307,59 @@ void moveArm() { //Arm up + down
   // RArm raise = positive
 
   // Guided Manual
-  if (Ct1.ButtonR2.pressing() && RArm.position(degrees) > -15 && LArm.position(degrees) < 15) {// lower
-    RArm.spin(reverse, 35, pct);
-    LArm.spin(forward, 35, pct);
-  } else if (Ct1.ButtonR1.pressing() && RArm.position(degrees) < 260 && LArm.position(degrees) > -260) {// raise
-    RArm.spin(forward, 35, pct);
-    LArm.spin(reverse, 35, pct);
-  } else {
-    RArm.setStopping(coast);
-    LArm.setStopping(coast);
-    RArm.stop();
-    LArm.stop();
-  }
-
-  // RArm.setStopping(coast);
-  // LArm.setStopping(coast);
-  // if (Ct1.ButtonR1.pressing()){
-  //   RArm.spin(forward, 35, percent);
-  //   LArm.spin(reverse, 35, percent);
-  // } else if (Ct1.ButtonR2.pressing()){
-  //   RArm.spin(reverse, 35, percent);
-  //   LArm.spin(forward, 35, percent);
+  // if (Ct1.ButtonR2.pressing() && RArm.position(degrees) > -15 && LArm.position(degrees) < 15) {// lower
+  //   RArm.spin(reverse, 35, pct);
+  //   LArm.spin(forward, 35, pct);
+  // } else if (Ct1.ButtonR1.pressing() && RArm.position(degrees) < 260 && LArm.position(degrees) > -260) {// raise
+  //   RArm.spin(forward, 35, pct);
+  //   LArm.spin(reverse, 35, pct);
   // } else {
+  //   RArm.setStopping(coast);
+  //   LArm.setStopping(coast);
   //   RArm.stop();
   //   LArm.stop();
   // }
+
+  // Raw manual
+  RArm.setStopping(coast);
+  LArm.setStopping(coast);
+  if (Ct1.ButtonR1.pressing()){
+    RArm.spin(forward, 35, percent);
+    LArm.spin(reverse, 35, percent);
+  } else if (Ct1.ButtonR2.pressing()){
+    RArm.spin(reverse, 35, percent);
+    LArm.spin(forward, 35, percent);
+  } else {
+    RArm.stop();
+    LArm.stop();
+  }
 }
 
 void moveHook() { //Hook up + down (300 deg <-> 1100 deg)
   // Guided Manual
-  if (Ct1.ButtonA.pressing() && Hook.position(degrees) > 300) {// lower
+  // if (Ct1.ButtonA.pressing() && Hook.position(degrees) > 300) {// lower
+  //   Hook.setVelocity(100, pct);
+  //   Hook.spin(reverse);
+  // } else if (Ct1.ButtonB.pressing() && Hook.position(degrees) < 1100) {// raise
+  //   Hook.setVelocity(100, pct);
+  //   Hook.spin(forward);
+  // } else {
+  //   Hook.setStopping(hold);
+  //   Hook.stop();
+  // }
+
+  // Raw manual
+  if (Ct1.ButtonA.pressing()) {// lower
     Hook.setVelocity(100, pct);
     Hook.spin(reverse);
-  } else if (Ct1.ButtonB.pressing() && Hook.position(degrees) < 1100) {// raise
+  } else if (Ct1.ButtonB.pressing()) {// raise
     Hook.setVelocity(100, pct);
     Hook.spin(forward);
   } else {
     Hook.setStopping(hold);
     Hook.stop();
   }
+
   // // Auto
   // if (Ct1.ButtonA.pressing()) {
   //   Hook.setVelocity(100, pct);
