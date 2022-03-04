@@ -45,13 +45,12 @@ competition Competition;
 void pre_auton(void) {
   vexcodeInit();
   // Robot Init
-  Gyro.startCalibration(2000);
-  wait(2, sec);
-  wait(200, msec);
-  while (Gyro.isCalibrating()) {
-    wait(10, msec);
-    print("hello world");
-  }
+  // Gyro.startCalibration(2000);
+  // wait(200, msec);
+  // while (Gyro.isCalibrating()) {
+  //   wait(10, msec);
+  //   task::sleep(10);
+  // }
 }
 
 void autonomous(void) {
@@ -132,35 +131,52 @@ void arcadeDrive(float joyX, float joyY) {
 
 void rollerSpin(){ //Spin roller + intake
   if (Ct1.ButtonL1.pressing()){
-    roller.spin(forward, 100, percent);
+    roller.spin(forward, 70, percent);
   } else if (Ct1.ButtonL2.pressing()){
-    roller.spin(reverse, 100, percent);
+    roller.spin(reverse, 70, percent);
   } else {
     roller.stop();
   }
 }
 
 void moveArm() { //Arm up + down
-  RArm.setStopping(coast);
-  LArm.setStopping(coast);
-  if (Ct1.ButtonR1.pressing()){
-    RArm.spin(forward, 35, percent);
-    LArm.spin(reverse, 35, percent);
-  } else if (Ct1.ButtonR2.pressing()){
-    RArm.spin(reverse, 35, percent);
-    LArm.spin(forward, 35, percent);
+  // LArm raise = negative
+  // RArm raise = positive
+
+  // Guided Manual
+  if (Ct1.ButtonR2.pressing() && RArm.position(degrees) > -15 && LArm.position(degrees) < 15) {// lower
+    RArm.spin(reverse, 35, pct);
+    LArm.spin(forward, 35, pct);
+  } else if (Ct1.ButtonR1.pressing() && RArm.position(degrees) < 260 && LArm.position(degrees) > -260) {// raise
+    RArm.spin(forward, 35, pct);
+    LArm.spin(reverse, 35, pct);
   } else {
+    RArm.setStopping(coast);
+    LArm.setStopping(coast);
     RArm.stop();
     LArm.stop();
   }
+
+  // RArm.setStopping(coast);
+  // LArm.setStopping(coast);
+  // if (Ct1.ButtonR1.pressing()){
+  //   RArm.spin(forward, 35, percent);
+  //   LArm.spin(reverse, 35, percent);
+  // } else if (Ct1.ButtonR2.pressing()){
+  //   RArm.spin(reverse, 35, percent);
+  //   LArm.spin(forward, 35, percent);
+  // } else {
+  //   RArm.stop();
+  //   LArm.stop();
+  // }
 }
 
 void moveHook() { //Hook up + down (300 deg <-> 1100 deg)
   // Guided Manual
-  if (Ct1.ButtonA.pressing() && Hook.position(degrees) > 300) {
+  if (Ct1.ButtonA.pressing() && Hook.position(degrees) > 300) {// lower
     Hook.setVelocity(100, pct);
     Hook.spin(reverse);
-  } else if (Ct1.ButtonB.pressing() && Hook.position(degrees) < 1100) {
+  } else if (Ct1.ButtonB.pressing() && Hook.position(degrees) < 1100) {// raise
     Hook.setVelocity(100, pct);
     Hook.spin(forward);
   } else {
@@ -206,10 +222,18 @@ void moveForward(double dist, int spd) {// (cm, pct)
 }
 
 void debug() {
-  if (Ct1.ButtonUp.pressing()) {
-    moveForward(50, 30);
-  }
+  // if (Ct1.ButtonUp.pressing()) {
+  //   moveForward(50, 30);
+  // }
+  
   Brain.Screen.clearScreen();
+  Brain.Screen.setCursor(1, 1);
+  print("LArm: ");
+  print(LArm.position(degrees));
+  Brain.Screen.setCursor(2, 1);
+  print("RArm: ");
+  print(RArm.position(degrees));
+  /*
   Brain.Screen.setCursor(1, 1);
   print("LT: ");
   print(LT.position(turns));
@@ -225,6 +249,7 @@ void debug() {
   Brain.Screen.setCursor(5, 1);
   print("Robot rotation: ");
   print(Gyro.rotation(deg));
+  */
   /*
   Forward:
   Left side - negative
