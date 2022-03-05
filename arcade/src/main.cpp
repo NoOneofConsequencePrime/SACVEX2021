@@ -46,6 +46,9 @@ competition Competition;
 // Program Parameters
 static const double PI = 3.1415926;
 
+// Global Data
+static double globalRot = 0;
+
 void pre_auton(void) {
   vexcodeInit();
   // Robot Init
@@ -100,7 +103,7 @@ void debug() {
   // print(Hook.position(degrees));
 }
 
-void moveForward(double dist, int spd) {// (cm, pct)
+void moveForward(double dist, int spd, bool pauseFlag) {// (cm, pct)
   // Settings
   LT.setStopping(brake);
   LB.setStopping(brake);
@@ -145,7 +148,7 @@ void moveForward(double dist, int spd) {// (cm, pct)
   // LT.spinToPosition(curWheels.lt-rotNeed, turns);
 
   // inertia settle
-  wait(200, msec);
+  if (pauseFlag) wait(150, msec);
 
   // while (RT.position(turns) < curWheels.rt+rotNeed || RB.position(turns) < curWheels.rb+rotNeed || LT.position(turns) > curWheels.lt-rotNeed || LB.position(turns) > curWheels.lb-rotNeed) {
   // }
@@ -168,6 +171,11 @@ void rotateTowards(double rot, int spd) {
 
   // Data
   double initDeg = Gyro.rotation(deg);
+  if (rot > 0) {
+    rot -= std::max(0.0, globalRot-Gyro.rotation(deg));
+  } else if (rot < 0) {
+    rot += std::max(0.0, globalRot-Gyro.rotation(deg));
+  }
 
   if (rot > 0) {
     // Adjustment
@@ -198,19 +206,50 @@ void rotateTowards(double rot, int spd) {
   }
   
   // inertia settle
-  wait(200, msec);
+  wait(150, msec);
 }
 
 void autonomous(void) {
+  // rotateTowards(90, 50);
+  // wait(500, msec);
+  // rotateTowards(90, 50);
+  // wait(500, msec);
+  // rotateTowards(90, 50);
+  // wait(500, msec);
+  // rotateTowards(90, 50);
+  // wait(500, msec);
+  // wait(500, msec);
+  // rotateTowards(90, 50);
+  // wait(500, msec);
+  // Version 2
+  
+  // Version 1
   Hook.setStopping(hold);
   Hook.setVelocity(100, pct);
   Hook.spinToPosition(1100, degrees);
-  rotateTowards(27.5, 40);
-  moveForward(-55, 70);
+  moveForward(-25, 70, true);
+  rotateTowards(36, 50);
+  moveForward(-20, 70, false);
+  moveForward(-22, 40, true);
   Hook.spinToPosition(300, degrees);
   while (Hook.isSpinning()) wait(5, msec);
-  moveForward(50, 100);
+  moveForward(33, 70, true);
   Hook.spinToPosition(1100, degrees);
+  while (Hook.isSpinning()) wait(5, msec);
+  moveForward(22, 70, true);
+  rotateTowards(-34, 30);
+  // Second goal
+  // Hook.setStopping(hold);
+  // Hook.setVelocity(100, pct);
+  // Hook.spinToPosition(1100, degrees);
+  // moveForward(-102, 80, false);
+  // moveForward(-23, 40, true);
+  // Hook.spinToPosition(820, degrees);
+  // while (Hook.isSpinning()) wait(5, msec);
+  // moveForward(95, 100, true);
+  // Hook.spinToPosition(1100, degrees);
+  // while (Hook.isSpinning()) wait(5, msec);
+
   debug(); 
 }
 
@@ -302,6 +341,9 @@ void rollerSpin(){ //Spin roller + intake
   }
 }
 
+bool armModeChk = false;
+int armSpd = 35;
+
 void moveArm() { //Arm up + down
   // LArm raise = negative
   // RArm raise = positive
@@ -321,14 +363,20 @@ void moveArm() { //Arm up + down
   // }
 
   // Raw manual
+  if (Ct1.ButtonUp.pressing() && !armModeChk) {
+    armModeChk = true;
+    armSpd = (armSpd == 35)? 75 : 35;
+  } else {
+    armModeChk = false;              
+  }
   RArm.setStopping(coast);
   LArm.setStopping(coast);
   if (Ct1.ButtonR1.pressing()){
-    RArm.spin(forward, 35, percent);
-    LArm.spin(reverse, 35, percent);
+    RArm.spin(forward, armSpd, percent);
+    LArm.spin(reverse, armSpd, percent);
   } else if (Ct1.ButtonR2.pressing()){
-    RArm.spin(reverse, 35, percent);
-    LArm.spin(forward, 35, percent);
+    RArm.spin(reverse, armSpd, percent);
+    LArm.spin(forward, armSpd, percent);
   } else {
     RArm.stop();
     LArm.stop();
