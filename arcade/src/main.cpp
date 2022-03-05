@@ -128,14 +128,14 @@ void moveForward(double dist, int spd, bool pauseFlag) {// (cm, pct)
     LB.spin(forward);
     RB.spin(forward);
     LT.spin(forward);
-    while (RT.position(turns) < curWheels.rt+rotNeed) wait(5, msec);
+    while (RT.position(turns) < curWheels.rt+rotNeed && LT.position(turns) > curWheels.lt-rotNeed) wait(5, msec);
   } else if (dist < 0) {// backward
     rotNeed += std::max(rotNeed, ((db)spd*spd/1000 + 3)/(10.16*PI));
     RT.spin(reverse);
     LB.spin(reverse);
     RB.spin(reverse);
     LT.spin(reverse);
-    while (RT.position(turns) > curWheels.rt+rotNeed) wait(5, msec);
+    while (RT.position(turns) > curWheels.rt+rotNeed && LT.position(turns) < curWheels.lt-rotNeed) wait(5, msec);
   }
   LT.stop();
   RT.stop();
@@ -158,7 +158,7 @@ void moveForward(double dist, int spd, bool pauseFlag) {// (cm, pct)
   // RB.stop();
 }
 
-void rotateTowards(double rot, int spd) {
+void rotateTowards(double rot, int spd, bool pauseFlag) {
   // Settings
   LT.setStopping(brake);
   LB.setStopping(brake);
@@ -206,7 +206,7 @@ void rotateTowards(double rot, int spd) {
   }
   
   // inertia settle
-  wait(150, msec);
+  if (pauseFlag) wait(150, msec);
 }
 
 void autonomous(void) {
@@ -228,7 +228,7 @@ void autonomous(void) {
   Hook.setVelocity(100, pct);
   Hook.spinToPosition(1100, degrees);
   moveForward(-25, 70, true);
-  rotateTowards(36, 50);
+  rotateTowards(36, 50, true);
   moveForward(-20, 70, false);
   moveForward(-22, 40, true);
   Hook.spinToPosition(300, degrees);
@@ -237,18 +237,18 @@ void autonomous(void) {
   Hook.spinToPosition(1100, degrees);
   while (Hook.isSpinning()) wait(5, msec);
   moveForward(22, 70, true);
-  rotateTowards(-34, 30);
+  rotateTowards(-34, 30, true);
   // Second goal
   // Hook.setStopping(hold);
   // Hook.setVelocity(100, pct);
   // Hook.spinToPosition(1100, degrees);
-  // moveForward(-102, 80, false);
-  // moveForward(-23, 40, true);
-  // Hook.spinToPosition(820, degrees);
-  // while (Hook.isSpinning()) wait(5, msec);
-  // moveForward(95, 100, true);
-  // Hook.spinToPosition(1100, degrees);
-  // while (Hook.isSpinning()) wait(5, msec);
+  moveForward(-112, 80, false);
+  moveForward(-23, 40, true);
+  Hook.spinToPosition(820, degrees);
+  while (Hook.isSpinning()) wait(5, msec);
+  moveForward(110, 100, true);
+  Hook.spinToPosition(1100, degrees);
+  while (Hook.isSpinning()) wait(5, msec);
 
   debug(); 
 }
