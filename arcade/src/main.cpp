@@ -209,46 +209,93 @@ void rotateTowards(double rot, int spd, bool pauseFlag) {
   if (pauseFlag) wait(150, msec);
 }
 
+void moveArm(db rot, int spd) {// global 220 to load, 55 to dump
+  // Settings
+  RArm.setStopping(coast);
+  LArm.setStopping(coast);
+  RArm.setVelocity(spd, pct);
+  LArm.setVelocity(-spd, pct);
+
+  // Data
+  db rTmp = RArm.position(degrees), lTmp = LArm.position(degrees);
+
+  if (rot > 0) {
+    RArm.spin(forward);
+    LArm.spin(forward);
+    while (RArm.position(degrees) < rTmp+rot || LArm.position(degrees) > lTmp-rot) wait(5, msec);
+  } else if (rot < 0) {
+    RArm.spin(reverse);
+    LArm.spin(reverse);
+    while (RArm.position(degrees) > rTmp+rot || LArm.position(degrees) < lTmp-rot) wait(5, msec);
+  }
+
+  RArm.stop();
+  LArm.stop();
+}
+
 void autonomous(void) {
-  // rotateTowards(90, 50);
-  // wait(500, msec);
-  // rotateTowards(90, 50);
-  // wait(500, msec);
-  // rotateTowards(90, 50);
-  // wait(500, msec);
-  // rotateTowards(90, 50);
-  // wait(500, msec);
-  // wait(500, msec);
-  // rotateTowards(90, 50);
-  // wait(500, msec);
-  // Version 2
-  
-  // Version 1
+  // Settings
   Hook.setStopping(hold);
   Hook.setVelocity(100, pct);
+  LArm.setTimeout(3, sec);
+  RArm.setTimeout(3, sec);
+  
+  // Version 2 (Left)
+  // moveForward(5, 35, true);
+  // rotateTowards(92, 30, true);
+  // moveArm(235, 30);
+  // moveForward(25, 40, false);
+  // moveForward(19, 15, true);
+  // moveArm(-165, 10);
+  // moveForward(-40, 50, true);
+  // Hook.spinToPosition(1100, degrees);
+  // rotateTowards(90, 40, true);
+  // moveForward(-20, 50, true);
+  
+  // Version 1 (Right)
+  moveForward(25, 40, true);
+  rotateTowards(55, 20, true);
+  moveArm(220, 25);
+  moveForward(30, 40, false);
+  moveForward(29, 15, true);
+  moveArm(-165, 20);
+  moveForward(-40, 50, true);
+  rotateTowards(182, 45, true);
   Hook.spinToPosition(1100, degrees);
-  moveForward(-25, 70, true);
-  rotateTowards(36, 50, true);
-  moveForward(-20, 70, false);
-  moveForward(-22, 40, true);
+  moveForward(-35, 40, true);
   Hook.spinToPosition(300, degrees);
-  while (Hook.isSpinning()) wait(5, msec);
-  moveForward(33, 70, true);
+  moveForward(48, 80, true);
   Hook.spinToPosition(1100, degrees);
-  while (Hook.isSpinning()) wait(5, msec);
-  moveForward(22, 70, true);
-  rotateTowards(-34, 30, true);
+
+  // while (RArm.isSpinning() || LArm.isSpinning()) wait(5, msec);
+  // Version 2
+  // Hook.setStopping(hold);
+  // Hook.setVelocity(100, pct);
+  // Hook.spinToPosition(1100, degrees);
+  // moveForward(-25, 70, true);
+  // rotateTowards(36, 50, true);
+  // moveForward(-20, 70, false);
+  // moveForward(-22, 40, true);
+  // Hook.spinToPosition(300, degrees);
+  // while (Hook.isSpinning()) wait(5, msec);
+  // moveForward(33, 70, true);
+  // Hook.spinToPosition(1100, degrees);
+  // while (Hook.isSpinning()) wait(5, msec);
+  // moveForward(22, 70, true);
+  // rotateTowards(-34, 30, true);
+
   // Second goal
   // Hook.setStopping(hold);
   // Hook.setVelocity(100, pct);
   // Hook.spinToPosition(1100, degrees);
-  moveForward(-112, 80, false);
-  moveForward(-23, 40, true);
-  Hook.spinToPosition(820, degrees);
-  while (Hook.isSpinning()) wait(5, msec);
-  moveForward(110, 100, true);
-  Hook.spinToPosition(1100, degrees);
-  while (Hook.isSpinning()) wait(5, msec);
+  
+  // moveForward(-112, 80, false);
+  // moveForward(-23, 40, true);
+  // Hook.spinToPosition(820, degrees);
+  // while (Hook.isSpinning()) wait(5, msec);
+  // moveForward(110, 100, true);
+  // Hook.spinToPosition(1100, degrees);
+  // while (Hook.isSpinning()) wait(5, msec);
 
   debug(); 
 }
