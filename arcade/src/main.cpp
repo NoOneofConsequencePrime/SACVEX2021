@@ -241,31 +241,31 @@ void autonomous(void) {
   RArm.setTimeout(3, sec);
   
   // Version 2 (Left)
-  // moveForward(5, 35, true);
-  // rotateTowards(92, 30, true);
-  // moveArm(235, 30);
-  // moveForward(25, 40, false);
-  // moveForward(19, 15, true);
-  // moveArm(-165, 10);
-  // moveForward(-40, 50, true);
-  // Hook.spinToPosition(1100, degrees);
-  // rotateTowards(90, 40, true);
-  // moveForward(-20, 50, true);
-  
-  // Version 1 (Right)
-  moveForward(25, 40, true);
-  rotateTowards(55, 20, true);
-  moveArm(220, 25);
-  moveForward(30, 40, false);
-  moveForward(29, 15, true);
-  moveArm(-165, 20);
+  moveForward(5, 35, true);
+  rotateTowards(92, 30, true);// if needed, change the turn
+  moveArm(235, 30);
+  moveForward(25, 40, false);
+  moveForward(19, 15, true);
+  moveArm(-165, 10);
   moveForward(-40, 50, true);
-  rotateTowards(182, 45, true);
   Hook.spinToPosition(1100, degrees);
-  moveForward(-35, 40, true);
-  Hook.spinToPosition(300, degrees);
-  moveForward(48, 80, true);
-  Hook.spinToPosition(1100, degrees);
+  rotateTowards(90, 40, true);
+  moveForward(-20, 50, true);
+  
+  // // Version 1 (Right)
+  // moveForward(25, 40, true);// clear back wall
+  // rotateTowards(55, 20, true);
+  // moveArm(220, 25);
+  // moveForward(30, 40, false);
+  // moveForward(29, 15, true);// caress the goal thing
+  // moveArm(-165, 20);
+  // moveForward(-40, 50, true);
+  // rotateTowards(182, 45, true);
+  // Hook.spinToPosition(1100, degrees);
+  // moveForward(-35, 40, true);
+  // Hook.spinToPosition(300, degrees);
+  // moveForward(48, 80, true);
+  // Hook.spinToPosition(1100, degrees);
 
   // while (RArm.isSpinning() || LArm.isSpinning()) wait(5, msec);
   // Version 2
